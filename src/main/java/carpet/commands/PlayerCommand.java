@@ -9,6 +9,7 @@ import carpet.patches.EntityPlayerMPFake;
 import carpet.utils.CommandHelper;
 import carpet.utils.Messenger;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.exceptions.MinecraftClientHttpException;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -29,6 +30,7 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
@@ -200,28 +202,21 @@ public class PlayerCommand
             Messenger.m(context.getSource(), "r Player ", "rb " + playerName, "r  is already logged on");
             return true;
         }
-        GameProfile profile = server.getProfileCache().get(playerName).orElse(null);
-        if (profile == null)
-        {
-            if (!CarpetSettings.allowSpawningOfflinePlayers)
-            {
-                Messenger.m(context.getSource(), "r Player "+playerName+" is either banned by Mojang, or auth servers are down. " +
-                        "Banned players can only be summoned in Singleplayer and in servers in off-line mode.");
+
+        try {
+            if (server.getProfileCache().get(playerName).isPresent()) {
+                Messenger.m(context.getSource(), "r Player " + playerName + " is already a player in Minecraft");
                 return true;
-            } else {
-                profile = new GameProfile(UUIDUtil.createOfflinePlayerUUID(playerName), playerName);
             }
-        }
-        if (manager.getBans().isBanned(profile))
+        } catch (MinecraftClientHttpException ignored) {}
+
+        if (!CarpetSettings.allowSpawningOfflinePlayers)
         {
-            Messenger.m(context.getSource(), "r Player ", "rb " + playerName, "r  is banned on this server");
+            Messenger.m(context.getSource(), "r Player "+playerName+" is either banned by Mojang, or auth servers are down. " +
+                    "Banned players can only be summoned in Singleplayer and in servers in off-line mode.");
             return true;
         }
-        if (manager.isUsingWhitelist() && manager.isWhiteListed(profile) && !context.getSource().hasPermission(2))
-        {
-            Messenger.m(context.getSource(), "r Whitelisted players can only be spawned by operators");
-            return true;
-        }
+
         return false;
     }
 
@@ -272,9 +267,14 @@ public class PlayerCommand
         boolean flying = false;
         if (source.getEntity() instanceof ServerPlayer sender)
         {
+            if (isNotVanillaWorld(sender.level()))
+            {
+                Messenger.m(context.getSource(), "r Player spawn is disabled for non-vanilla worlds");
+            }
             mode = sender.gameMode.getGameModeForPlayer();
             flying = sender.getAbilities().flying;
         }
+
         try {
             mode = GameModeArgument.getGameMode(context, "gamemode");
         } catch (IllegalArgumentException notPresent) {}
@@ -289,6 +289,7 @@ public class PlayerCommand
             flying = false;
         }
         String playerName = StringArgumentType.getString(context, "player");
+
         if (playerName.length() > maxNameLength(source.getServer()))
         {
             Messenger.m(source, "rb Player name: " + playerName + " is too long");
@@ -332,6 +333,10 @@ public class PlayerCommand
         if (cantManipulate(context)) return 0;
 
         ServerPlayer player = getPlayer(context);
+        if (isNotVanillaWorld(player.level()))
+        {
+            Messenger.m(context.getSource(), "r Player shadow is disabled for non-vanilla worlds");
+        }
         if (player instanceof EntityPlayerMPFake)
         {
             Messenger.m(context.getSource(), "r Cannot shadow fake players");
@@ -344,5 +349,20 @@ public class PlayerCommand
 
         EntityPlayerMPFake.createShadow(player.getServer(), player);
         return 1;
+    }
+
+    private static boolean isNotVanillaWorld(Level level) {
+        ResourceKey<Level> dimension = level.dimension();
+
+        return dimension != Level.OVERWORLD && dimension != Level.NETHER && dimension != Level.END;
+    }
+
+    private static boolean isExistingUsername(String username, MinecraftServer server) {
+        GameProfileCache profileCache = server.getProfileCache();
+
+        if (profileCache == null)
+            return false;
+
+        return profileCache.get(username).isPresent();
     }
 }

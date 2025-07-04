@@ -35,6 +35,7 @@ import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.phys.Vec3;
 import carpet.fakes.ServerPlayerInterface;
 import carpet.utils.Messenger;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -252,5 +253,20 @@ public class EntityPlayerMPFake extends ServerPlayer
             connection.player.hasChangedDimension();
         }
         return connection.player;
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return addFakePrefix(super.getDisplayName());
+    }
+
+    @Override
+    public @Nullable Component getTabListDisplayName() {
+        return addFakePrefix(super.getTabListDisplayName());
+    }
+
+    private static Component addFakePrefix(Component component) {
+        return Component.literal("*")
+                .append(component);
     }
 }

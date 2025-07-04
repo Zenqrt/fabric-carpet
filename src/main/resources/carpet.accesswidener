@@ -8,6 +8,7 @@ accessible class net/minecraft/world/level/border/WorldBorder$StaticBorderExtent
 accessible class net/minecraft/server/MinecraftServer$ReloadableResources
 accessible class net/minecraft/world/level/biome/Biome$ClimateSettings
 accessible class net/minecraft/world/level/block/entity/SculkSensorBlockEntity$VibrationUser
+accessible class net/minecraft/server/players/GameProfileCache$GameProfileInfo
 
 #TODO fields and methods should be fetched via interfaces unless there is a good reason not to
 accessible method net/minecraft/world/level/border/WorldBorder getListeners ()Ljava/util/List;
@@ -17,3 +18,5 @@ accessible method net/minecraft/world/level/redstone/DefaultRedstoneWireEvaluato
 accessible method net/minecraft/world/level/block/entity/SkullBlockEntity fetchGameProfile (Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;
 
 accessible field net/minecraft/world/level/block/state/BlockBehaviour UPDATE_SHAPE_ORDER [Lnet/minecraft/core/Direction;
+accessible field net/minecraft/server/players/GameProfileCache profilesByName Ljava/util/Map;
+accessible field net/minecraft/server/players/GameProfileCache profilesByUUID Ljava/util/Map;
