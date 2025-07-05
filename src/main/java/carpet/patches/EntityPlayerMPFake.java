@@ -20,9 +20,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.players.GameProfileCache;
+import net.minecraft.stats.Stat;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
@@ -182,6 +184,14 @@ public class EntityPlayerMPFake extends ServerPlayer
     }
 
     @Override
+    public void awardStat(Stat<?> stat, int i) {
+    }
+
+    @Override
+    public void resetStat(Stat<?> stat) {
+    }
+
+    @Override
     public void tick()
     {
         if (this.getServer().getTickCount() % 10 == 0)
@@ -253,6 +263,21 @@ public class EntityPlayerMPFake extends ServerPlayer
             connection.player.hasChangedDimension();
         }
         return connection.player;
+    }
+
+    @Override
+    protected void dropExperience(ServerLevel serverLevel, @Nullable Entity entity) {
+
+    }
+
+    @Override
+    protected int getBaseExperienceReward(ServerLevel serverLevel) {
+        return 0;
+    }
+
+    @Override
+    public @Nullable LivingEntity getKillCredit() {
+        return null;
     }
 
     @Override
