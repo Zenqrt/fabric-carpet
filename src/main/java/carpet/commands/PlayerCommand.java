@@ -205,7 +205,7 @@ public class PlayerCommand
 
         try {
             if (server.getProfileCache().get(playerName).isPresent()) {
-                Messenger.m(context.getSource(), "r Player " + playerName + " is already a player in Minecraft");
+                Messenger.m(context.getSource(), "r Player ", "rb" + playerName, "r is already a player in Minecraft");
                 return true;
             }
         } catch (MinecraftClientHttpException ignored) {}
